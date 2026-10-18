@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lab 04 - Date</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            background: #f0f4f8;
+        }
+        .card {
+            background: #cfe2f3;
+            border: 1px solid #333;
+            padding: 40px 60px;
+            text-align: center;
+        }
+        button {
+            font-size: 18px;
+            padding: 6px 20px;
+            margin: 10px;
+            border: 1px solid #333;
+            border-radius: 6px;
+            background: #fff;
+            cursor: pointer;
+        }
+        button:hover { background: #e8e8e8; }
+        #date { font-size: 22px; margin-top: 20px; min-height: 1.5em; }
+        #meta { font-size: 13px; color: #555; }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <h2>Choisir la langue</h2>
+        <button onclick="getDate('en')">en</button>
+        <button onclick="getDate('fr')">fr</button>
+        <div id="date"></div>
+        <div id="meta"></div>
+    </div>
+
+    <script>
+        // Les requêtes passent par le reverse proxy Nginx (même origine),
+        // qui les redirige vers l'API Date_en ou Date_fr.
+        async function getDate(lang) {
+            const dateEl = document.getElementById('date');
+            const metaEl = document.getElementById('meta');
+            try {
+                const response = await fetch(`/api/${lang}/date`);
+                if (!response.ok) throw new Error(`HTTP ${response.status}`);
+                const data = await response.json();
+                dateEl.textContent = `${data.date} - ${data.time}`;
+                metaEl.textContent = `Servi par Date_${data.lang} API (${data.service})`;
+            } catch (err) {
+                dateEl.textContent = 'Erreur : ' + err.message;
+                metaEl.textContent = '';
+            }
+        }
+    </script>
+</body>
+</html>

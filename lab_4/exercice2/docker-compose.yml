@@ -1,0 +1,46 @@
+services:
+  # Base de données SQLite (schéma + interface sqlite-web protégée par mot de passe)
+  db:
+    build: ./db
+    volumes:
+      - sqlite-data:/data
+    secrets:
+      - db_admin_password
+    ports:
+      # Admin accessible uniquement depuis la machine hôte
+      - "127.0.0.1:8081:8080"
+    networks: [labnet]
+
+  # Books API du Lab03 : enregistre chaque accès (date + IP) dans SQLite
+  api:
+    build: ./api
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      DB_PATH: /data/access.db
+      ADMIN_PASSWORD_FILE: /run/secrets/api_admin_password
+    volumes:
+      - sqlite-data:/data
+      - api-logs:/var/log/api
+    secrets:
+      - api_admin_password
+    ports:
+      - "5000:5000"
+    networks: [labnet]
+
+networks:
+  labnet:
+
+# Volumes nommés : les données survivent à "docker compose down" et aux rebuilds
+volumes:
+  sqlite-data:
+  api-logs:
+
+# Secrets Docker : montés en lecture seule dans /run/secrets/<nom>
+# Les fichiers .txt sont ignorés par git (voir .gitignore)
+secrets:
+  db_admin_password:
+    file: ./secrets/db_admin_password.txt
+  api_admin_password:
+    file: ./secrets/api_admin_password.txt

@@ -1,0 +1,52 @@
+services:
+  # 1. Interface Web (HTML + JS) servie par un Nginx statique
+  frontend:
+    image: nginx:1.27-alpine
+    volumes:
+      - ./frontend:/usr/share/nginx/html:ro
+    networks: [labnet]
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://127.0.0.1/"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+  # 3. API Date en anglais
+  date_en:
+    build: ./date_api
+    environment:
+      DATE_LANG: en
+    volumes:
+      - api-logs:/var/log/api
+    networks: [labnet]
+
+  # 4. API Date en français (même image, autre langue)
+  date_fr:
+    build: ./date_api
+    environment:
+      DATE_LANG: fr
+    volumes:
+      - api-logs:/var/log/api
+    networks: [labnet]
+
+  # 2. Reverse proxy : seul service exposé sur l'hôte
+  proxy:
+    image: nginx:1.27-alpine
+    volumes:
+      - ./proxy/nginx.conf:/etc/nginx/nginx.conf:ro
+    ports:
+      - "8080:80"
+    depends_on:
+      frontend:
+        condition: service_healthy
+      date_en:
+        condition: service_healthy
+      date_fr:
+        condition: service_healthy
+    networks: [labnet]
+
+networks:
+  labnet:
+
+volumes:
+  api-logs:
