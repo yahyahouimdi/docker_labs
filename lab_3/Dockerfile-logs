@@ -1,0 +1,21 @@
+FROM python:3.11-slim
+
+RUN useradd -m -s /bin/bash apiuser
+
+WORKDIR /app
+
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+
+COPY app.py .
+
+# Création du répertoire de logs et attribution à apiuser
+RUN mkdir -p /var/log/api && chown -R apiuser:apiuser /var/log/api
+
+RUN chown -R apiuser:apiuser /app
+
+USER apiuser
+
+EXPOSE 5000
+
+CMD ["python", "app.py"]
