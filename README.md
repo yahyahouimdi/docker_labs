@@ -12,7 +12,12 @@ Practical Docker and containerisation exercises for the virtualisation module.
   - `question5/`: Flask date API.
   - `benchmark/`: ApacheBench container for load testing.
 
-For the detailed Lab 2 instructions and question notes, see [`Lab_2/README.md`](Lab_2/README.md).
+- `lab_3/`: Flask Books API with a non-root user and file logging.
+- `lab_4/`: Docker Compose exercises built on Lab 3.
+  - `exercice1/`: Date web app (HTML + JS frontend, Nginx reverse proxy, `en` and `fr` Flask APIs).
+  - `exercice2/`: Lab 3 API that logs every access (date + client IP) to a persistent SQLite database, with passwords stored as Docker secrets.
+
+For the detailed Lab 2 instructions and question notes, see [`Lab_2/README.md`](Lab_2/README.md). For Lab 4, see [`lab_4/README.md`](lab_4/README.md).
 
 ## Prerequisites
 
