@@ -1,0 +1,90 @@
+EXAM LAB - VALIDATION TESTS
+===========================
+
+Start the stack first:
+> docker compose up -d --build --wait
+
+
+TEST 1 - Startup order
+----------------------
+> docker compose ps
+
+NAME                STATUS                    PORTS
+exam-lab-api-1      Up 11 seconds (healthy)
+exam-lab-cache-1    Up 17 seconds (healthy)   6379/tcp
+exam-lab-db-1       Up 17 seconds (healthy)   5432/tcp
+exam-lab-proxy-1    Up 6 seconds (healthy)    0.0.0.0:8080->80/tcp
+exam-lab-worker-1   Up 11 seconds
+exam-lab-worker-2   Up 11 seconds
+
+> docker inspect --format "{{.Name}} {{.State.StartedAt}}" exam-lab-db-1 exam-lab-cache-1 exam-lab-api-1 exam-lab-proxy-1
+
+/exam-lab-db-1     08:18:20
+/exam-lab-cache-1  08:18:20
+/exam-lab-api-1    08:18:26
+/exam-lab-proxy-1  08:18:32
+
+=> db and cache start first, then the api (once db and cache are healthy),
+   then the proxy (once the api is healthy).
+
+
+TEST 2 - Network isolation
+--------------------------
+> curl.exe -I http://localhost:8080
+HTTP/1.1 200 OK                                  => the proxy is public: OK
+
+> docker compose exec api nc -zv db 5432
+db (172.20.0.2:5432) open                        => api can reach the db: OK
+
+> docker compose exec proxy nc -zv db 5432
+nc: bad address 'db'                             => proxy CANNOT reach the db: blocked
+
+> docker compose exec worker wget -T 5 http://example.com
+wget: bad address 'example.com'                  => worker has NO Internet: blocked
+
+=> Only the proxy is public. The db, cache and worker are on the private
+   "backend" network (internal: true).
+
+
+TEST 3 - Resource limits of the API
+-----------------------------------
+> docker stats --no-stream exam-lab-api-1
+
+NAME             CPU %     MEM USAGE / LIMIT
+exam-lab-api-1   0.02%     11.78MiB / 256MiB
+
+> docker inspect exam-lab-api-1 --format "CPU={{.HostConfig.NanoCpus}} RAM={{.HostConfig.Memory}}"
+
+CPU=500000000 RAM=268435456
+
+=> 500000000 nano-CPUs = 0.5 CPU, 268435456 bytes = 256 MB.
+
+
+TEST 4 - Scaling the workers (while the stack runs)
+---------------------------------------------------
+> docker compose up -d --scale worker=5 --no-recreate
+> docker compose ps worker
+
+NAME                STATUS
+exam-lab-worker-1   Up 42 seconds
+exam-lab-worker-2   Up 42 seconds
+exam-lab-worker-3   Up 1 second
+exam-lab-worker-4   Up 1 second
+exam-lab-worker-5   Up 1 second
+
+> docker compose up -d --scale worker=1 --no-recreate
+> docker compose ps
+
+NAME                STATUS
+exam-lab-api-1      Up 56 seconds (healthy)
+exam-lab-cache-1    Up About a minute (healthy)
+exam-lab-db-1       Up About a minute (healthy)
+exam-lab-proxy-1    Up 50 seconds (healthy)
+exam-lab-worker-1   Up 56 seconds
+
+=> Workers went 2 -> 5 -> 1. The api, db, cache and proxy kept running
+   (their uptime was not reset), and the site answered 200 the whole time.
+
+
+Stop everything:
+> docker compose down
