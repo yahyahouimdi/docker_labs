@@ -17,7 +17,9 @@ Practical Docker and containerisation exercises for the virtualisation module.
   - `exercice1/`: Date web app (HTML + JS frontend, Nginx reverse proxy, `en` and `fr` Flask APIs).
   - `exercice2/`: Lab 3 API that logs every access (date + client IP) to a persistent SQLite database, with passwords stored as Docker secrets.
 
-For the detailed Lab 2 instructions and question notes, see [`Lab_2/README.md`](Lab_2/README.md). For Lab 4, see [`lab_4/README.md`](lab_4/README.md).
+- `exam-lab/`: Microservices stack (Nginx proxy, API, scalable worker, PostgreSQL, Redis) with healthcheck-based startup order, an internal backend network, API resource limits and worker replicas.
+
+For the detailed Lab 2 instructions and question notes, see [`Lab_2/README.md`](Lab_2/README.md). For Lab 4, see [`lab_4/README.md`](lab_4/README.md). For the exam lab, see [`exam-lab/README.md`](exam-lab/README.md).
 
 ## Prerequisites
 
